@@ -89,6 +89,7 @@ function buildContext(
     signal,
     logger,
     getKey: base?.getKey ?? (() => undefined),
+    fetch: base?.fetch ?? globalThis.fetch,
   };
 }
 

@@ -46,12 +46,20 @@ importers:
       '@janus/queue':
         specifier: workspace:*
         version: link:../../packages/queue
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
 
   packages/checks:
     dependencies:
       '@janus/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
 
   packages/connectors:
     dependencies:

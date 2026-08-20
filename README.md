@@ -73,6 +73,18 @@ docker compose up -d   # postgres + redis
 pnpm dev
 ```
 
+### Try a passive scan now (no infra needed)
+
+The passive modules run end to end without Postgres or Redis:
+
+```bash
+pnpm --filter @janus/worker scan example.com
+```
+
+This queries only third-party/open sources (crt.sh, RDAP, DoH, Wayback, Shodan
+InternetDB) and sends **zero packets to the target**. Only scan assets you own
+or are authorized to test.
+
 ## Roadmap
 
 Development lands one phase at a time (each phase = a GitHub issue + PR):
@@ -80,7 +92,7 @@ Development lands one phase at a time (each phase = a GitHub issue + PR):
 - [x] **Phase 0** — Bootstrap: monorepo, tooling, Docker Compose
 - [x] **Phase 1** — Core contract: check schema, entity graph, runner
 - [x] **Phase 2** — Persistence + queue: Prisma schema, BullMQ, worker, profiles
-- [ ] **Phase 3** — Passive checks: crt.sh, RDAP/ASN, DNS, Wayback, InternetDB
+- [x] **Phase 3** — Passive checks: crt.sh, RDAP/ASN, DNS, Wayback, InternetDB
 - [ ] **Phase 4** — Web UI: target input, profile select, live checklist
 - [ ] **Phase 5** — Active checks + safety gate: live host/port, opt-in
 - [ ] **Phase 6** — Exposure + intel: security headers/TLS, CISA KEV

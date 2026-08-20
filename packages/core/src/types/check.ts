@@ -60,6 +60,11 @@ export interface CheckContext {
   readonly logger: Logger;
   /** Resolve a BYOK key by name, e.g. `SHODAN_API_KEY`. */
   readonly getKey: (name: string) => string | undefined;
+  /**
+   * Fetch implementation. Defaults to the global `fetch` in the runner; tests
+   * inject a stub so no real network call is made.
+   */
+  readonly fetch: typeof fetch;
 }
 
 /** Per-run configuration (rate limits, module-specific options). */
