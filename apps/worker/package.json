@@ -8,6 +8,7 @@
     "build": "tsc -b",
     "dev": "tsc -b --watch",
     "start": "node dist/index.js",
+    "scan": "tsx src/scan-cli.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
@@ -17,5 +18,8 @@
     "@janus/core": "workspace:*",
     "@janus/db": "workspace:*",
     "@janus/queue": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }
