@@ -114,6 +114,8 @@ the keyless toolbox, and tamper-evident Markdown reports.
       click a domain/subdomain/ip node to continue the scan from it.
 - [x] **Monitoring & diff** — `diffReports` between runs, repeatable scheduled
       scans (`kendi-varligim-monitor`), notify-on-change (log/webhook).
+- [x] **PDF export** — print-friendly HTML report; "PDF (yazdır)" saves as PDF
+      via the browser (no PDF dependency).
 
 ## License
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { renderReport } from '@janus/report';
+import { renderReport, renderHtml } from '@janus/report';
 import type { ReportInput } from '@janus/report';
 import { streamScan } from '@/lib/client';
 import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
@@ -49,9 +49,9 @@ export function ScanClient() {
     }
   }, []);
 
-  const downloadReport = useCallback(async () => {
-    if (!done || !lastReq) return;
-    const input: ReportInput = {
+  const buildInput = useCallback((): ReportInput | null => {
+    if (!done || !lastReq) return null;
+    return {
       target: { type: String(lastReq.type), value: lastReq.value },
       profileId: lastReq.profileId,
       generatedAt: new Date().toISOString(),
@@ -66,6 +66,11 @@ export function ScanClient() {
         skippedReason: t.skippedReason,
       })),
     };
+  }, [done, lastReq, tasks]);
+
+  const downloadReport = useCallback(async () => {
+    const input = buildInput();
+    if (!input || !lastReq) return;
     const { markdown } = await renderReport(input);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -74,7 +79,17 @@ export function ScanClient() {
     a.download = `janus-${lastReq.value}-${lastReq.profileId}.md`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [done, lastReq, tasks]);
+  }, [buildInput, lastReq]);
+
+  const printReport = useCallback(() => {
+    const input = buildInput();
+    if (!input) return;
+    const blob = new Blob([renderHtml(input)], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (win) win.addEventListener('load', () => win.print());
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }, [buildInput]);
 
   const onPivot = useCallback(
     (type: string, value: string) => {
@@ -114,12 +129,20 @@ export function ScanClient() {
       )}
 
       {showResults && (
-        <button
-          onClick={downloadReport}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-500"
-        >
-          📄 Rapor indir (Markdown · SHA-256 imzalı)
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            onClick={downloadReport}
+            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-500"
+          >
+            📄 Markdown (SHA-256 imzalı)
+          </button>
+          <button
+            onClick={printReport}
+            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-500"
+          >
+            🖨️ PDF (yazdır)
+          </button>
+        </div>
       )}
     </div>
   );
