@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import { ScanClient } from '@/components/ScanClient';
 
 export default function Home() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-4 py-10 sm:py-16">
-      <header className="mb-8">
+      <header className="mb-8 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden>
             🜏
@@ -15,6 +16,9 @@ export default function Home() {
             </p>
           </div>
         </div>
+        <Link href="/araclar" className="shrink-0 text-sm text-cyan-400 hover:text-cyan-300">
+          El Çantası →
+        </Link>
       </header>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 sm:p-6">

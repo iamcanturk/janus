@@ -38,6 +38,9 @@ importers:
       '@janus/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@janus/tools':
+        specifier: workspace:*
+        version: link:../../packages/tools
       next:
         specifier: ^15.1.6
         version: 15.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -140,7 +143,11 @@ importers:
         specifier: ^4.19.2
         version: 4.23.12
 
-  packages/tools: {}
+  packages/tools:
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
 
 packages:
 
