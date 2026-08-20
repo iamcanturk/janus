@@ -10,6 +10,11 @@
   "engines": {
     "node": ">=20"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

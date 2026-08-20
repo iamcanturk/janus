@@ -77,8 +77,8 @@ pnpm dev
 
 Development lands one phase at a time (each phase = a GitHub issue + PR):
 
-- [ ] **Phase 0** — Bootstrap: monorepo, tooling, Docker Compose
-- [ ] **Phase 1** — Core contract: check schema, entity graph, runner
+- [x] **Phase 0** — Bootstrap: monorepo, tooling, Docker Compose
+- [x] **Phase 1** — Core contract: check schema, entity graph, runner
 - [ ] **Phase 2** — Persistence + queue: Prisma schema, BullMQ, worker, profiles
 - [ ] **Phase 3** — Passive checks: crt.sh, RDAP/ASN, DNS, Wayback, InternetDB
 - [ ] **Phase 4** — Web UI: target input, profile select, live checklist
