@@ -4,7 +4,7 @@
 
 **Web-based, self-hostable, BYOK modular OSINT & vulnerability scanning platform.**
 
-*"A cybersecurity researcher's toolbox."*
+_"A cybersecurity researcher's toolbox."_
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Status: WIP](https://img.shields.io/badge/status-work%20in%20progress-orange.svg)](#roadmap)
@@ -29,7 +29,7 @@ Everything a researcher needs while mapping the attack surface of a target
 single web UI as a live checklist. Every control is a **module** (`check`); the
 system grows by adding modules, not by touching the core.
 
-- **Passive / active split** — a passive check sends *zero* packets to the
+- **Passive / active split** — a passive check sends _zero_ packets to the
   target; an active check sends live requests behind a red opt-in gate.
 - **Entity graph** — all output is written to a shared graph
   (`domain → subdomain → ip → asn → org → ...`) you can pivot through.
