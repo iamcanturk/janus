@@ -4,7 +4,9 @@ All scanning modules, grouped by phase and mode. Each check is one file that
 implements the `@janus/core` contract; adding a module means adding its file and
 appending it to `allChecks` — nothing in the core changes.
 
-## Shipped checks (Phase 3 — all passive, keyless)
+## Shipped checks
+
+### Passive (keyless) — sends zero packets to the target
 
 | id                  | phase | input       | produces           | source            |
 | ------------------- | ----- | ----------- | ------------------ | ----------------- |
@@ -14,12 +16,22 @@ appending it to `allChecks` — nothing in the core changes.
 | `wayback.urls`      | recon | domain      | url                | Wayback CDX       |
 | `shodan.internetdb` | recon | ip          | port, service, cve | Shodan InternetDB |
 
+### Active — sends live packets; only under a profile with `allowActive`
+
+| id                | phase       | risk   | input           | produces            |
+| ----------------- | ----------- | ------ | --------------- | ------------------- |
+| `host.http_probe` | enumeration | low    | domain, sub, ip | service, technology |
+| `net.port_scan`   | enumeration | medium | ip              | port, service       |
+
 `dns.records` raises **findings** for a missing SPF or DMARC policy;
 `shodan.internetdb` raises a finding per known CVE. Everything else is an
 observation — raw data never auto-promotes to a finding.
 
-All modules are **passive**: they query third-party/open sources and send zero
-packets to the target.
+Active checks are refused by the runner unless the profile sets `allowActive`
+(only `bug-bounty-surface` does), and the web UI gates them behind an explicit
+red confirmation. `net.port_scan` is a TCP-connect scan (rate-limited, no
+payload) with an injectable connect primitive, so the test suite opens no real
+sockets.
 
 ## Testing
 

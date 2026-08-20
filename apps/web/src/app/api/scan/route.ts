@@ -10,8 +10,8 @@
  * used for background jobs.
  */
 
-import { runScan } from '@janus/core';
-import type { EntityType } from '@janus/core';
+import { getProfile, runScan } from '@janus/core';
+import type { CheckConfig, EntityType } from '@janus/core';
 import { createRegistry } from '@janus/checks';
 import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
 
@@ -19,6 +19,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const registry = createRegistry();
+
+/** Conservative limits applied when a profile enables active checks. */
+const ACTIVE_CONFIG: CheckConfig = {
+  rateLimitPerSec: 15,
+  timeoutMs: 20_000,
+  options: { portTimeoutMs: 2500 },
+};
 
 function sse(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -37,6 +44,10 @@ export async function POST(req: Request): Promise<Response> {
   const type: EntityType = body.type ?? 'domain';
   const profileId = body.profileId ?? 'pasif-recon';
 
+  const profile = getProfile(profileId);
+  if (!profile) return new Response('Unknown profile', { status: 400 });
+  const config = profile.allowActive ? ACTIVE_CONFIG : undefined;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -49,6 +60,7 @@ export async function POST(req: Request): Promise<Response> {
           profileId,
           { type, value },
           {
+            config,
             onTask: (task) => {
               const evt: TaskEvent = {
                 checkId: task.checkId,

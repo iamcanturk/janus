@@ -94,7 +94,7 @@ Development lands one phase at a time (each phase = a GitHub issue + PR):
 - [x] **Phase 2** — Persistence + queue: Prisma schema, BullMQ, worker, profiles
 - [x] **Phase 3** — Passive checks: crt.sh, RDAP/ASN, DNS, Wayback, InternetDB
 - [x] **Phase 4** — Web UI: target input, profile select, live checklist
-- [ ] **Phase 5** — Active checks + safety gate: live host/port, opt-in
+- [x] **Phase 5** — Active checks + safety gate: live host/port, opt-in
 - [ ] **Phase 6** — Exposure + intel: security headers/TLS, CISA KEV
 - [ ] **Phase 7** — Toolbox: hash, JWT, Base64, CIDR, IOC extractor
 - [ ] **Phase 8** — Evidence & report: SHA-256 + timestamp, Markdown/PDF
