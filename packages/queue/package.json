@@ -1,21 +1,31 @@
 {
-  "name": "@janus/worker",
+  "name": "@janus/queue",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b --watch",
-    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@janus/checks": "workspace:*",
     "@janus/core": "workspace:*",
     "@janus/db": "workspace:*",
-    "@janus/queue": "workspace:*"
+    "bullmq": "^5.34.5",
+    "ioredis": "^5.4.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }

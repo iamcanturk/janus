@@ -58,5 +58,13 @@ export type { CheckRunReport, NormalizedResult, RunOptions } from './runner.js';
 // Registry
 export { CheckRegistry } from './registry.js';
 
+// Profiles
+export { BUILTIN_PROFILES, getProfile, resolveProfile } from './profile.js';
+export type { Profile } from './profile.js';
+
+// Scan orchestration
+export { runScan, selectChecks } from './scan.js';
+export type { ScanReport, ScanTaskReport, RunScanOptions } from './scan.js';
+
 // Logger
 export { nullLogger, createConsoleLogger } from './logger.js';

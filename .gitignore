@@ -63,3 +63,6 @@ Thumbs.db
 .prettiercache
 tmp/
 temp/
+
+# ---- Prisma generated client ----
+packages/db/generated/

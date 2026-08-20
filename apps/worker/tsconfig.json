@@ -5,6 +5,11 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "references": [{ "path": "../../packages/core" }, { "path": "../../packages/checks" }],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/checks" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/queue" }
+  ],
   "include": ["src/**/*.ts"]
 }
