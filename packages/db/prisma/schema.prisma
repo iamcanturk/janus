@@ -1,0 +1,151 @@
+// Janus persistence schema.
+//
+// A Job is one scan of one target with one profile. Every check run is a Task.
+// The entity graph (Entity + Edge) and the observation/finding split from
+// @janus/core are persisted per job so each scan keeps its own graph.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  CLEAN
+  OBSERVATION
+  FINDING
+  SKIPPED
+  ERROR
+}
+
+enum Severity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  targetType  String
+  targetValue String
+  profileId   String
+  allowActive Boolean   @default(false)
+  status      JobStatus @default(QUEUED)
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  error       String?
+  meta        Json?
+
+  tasks        Task[]
+  entities     Entity[]
+  edges        Edge[]
+  observations Observation[]
+  findings     Finding[]
+
+  @@index([status])
+  @@index([targetType, targetValue])
+}
+
+model Task {
+  id            String     @id @default(cuid())
+  jobId         String
+  job           Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  checkId       String
+  phase         String
+  mode          String
+  targetType    String
+  targetValue   String
+  status        TaskStatus @default(PENDING)
+  durationMs    Int?
+  skippedReason String?
+  error         String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+
+  observations Observation[]
+  findings     Finding[]
+
+  @@index([jobId])
+  @@index([jobId, status])
+}
+
+model Entity {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  key         String // stable "type:normalized-value"
+  type        String
+  value       String
+  firstSeen   DateTime
+  lastSeen    DateTime
+  sourceCheck String
+  meta        Json?
+
+  @@unique([jobId, key])
+  @@index([jobId, type])
+}
+
+model Edge {
+  id          String  @id @default(cuid())
+  jobId       String
+  job         Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fromKey     String
+  toKey       String
+  relation    String
+  sourceCheck String
+  meta        Json?
+
+  @@unique([jobId, fromKey, relation, toKey])
+  @@index([jobId])
+}
+
+model Observation {
+  id        String  @id @default(cuid())
+  jobId     String
+  job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  kind      String
+  entityKey String?
+  data      Json
+  message   String?
+
+  @@index([jobId])
+  @@index([taskId])
+}
+
+model Finding {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  taskId      String?
+  task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  code        String
+  title       String
+  severity    Severity
+  entityKey   String?
+  description String
+  evidence    Json?
+  references  Json?
+
+  @@index([jobId])
+  @@index([taskId])
+  @@index([severity])
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@janus/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:validate": "cross-env DATABASE_URL=postgresql://placeholder prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "build": "prisma generate && tsc -b",
+    "dev": "tsc -b --watch",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "lint": "eslint src",
+    "clean": "rm -rf dist .turbo generated *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@janus/core": "workspace:*",
+    "@prisma/client": "^6.2.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "prisma": "^6.2.1"
+  }
+}

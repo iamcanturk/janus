@@ -8,3 +8,6 @@ pnpm-lock.yaml
 
 # Author-maintained design document — keep as written
 PROJECT.md
+
+# Prisma generated client
+packages/db/generated
