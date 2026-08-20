@@ -11,6 +11,7 @@ export {
   markJobFailed,
   persistScanReport,
   getJobWithResults,
+  getPreviousSnapshot,
   listJobs,
 } from './repo.js';
 export type { CreateJobInput } from './repo.js';

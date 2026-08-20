@@ -8,3 +8,6 @@ export { SCAN_QUEUE_NAME, createScanQueue, createScanJobData, enqueueScan } from
 export type { ScanJobData } from './queue.js';
 export { createScanWorker } from './worker.js';
 export type { ScanWorkerDeps, ScanProgress } from './worker.js';
+export { scheduleMonitor, monitorJobId } from './monitor.js';
+export { logNotifier, webhookNotifier } from './notify.js';
+export type { Notifier } from './notify.js';
