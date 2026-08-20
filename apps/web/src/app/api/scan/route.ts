@@ -1,0 +1,100 @@
+/**
+ * Streaming scan API.
+ *
+ * Runs a scan with `runScan` and streams each task result to the browser as a
+ * Server-Sent Event, then a final summary. Node runtime — the passive modules
+ * use `fetch` and run server-side so third-party requests come from the server,
+ * not the user's browser.
+ *
+ * This is the interactive demo path. The durable queue/DB path (Phase 2) is
+ * used for background jobs.
+ */
+
+import { runScan } from '@janus/core';
+import type { EntityType } from '@janus/core';
+import { createRegistry } from '@janus/checks';
+import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const registry = createRegistry();
+
+function sse(event: string, data: unknown): string {
+  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  let body: ScanRequest;
+  try {
+    body = (await req.json()) as ScanRequest;
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  const value = body.value?.trim();
+  if (!value) return new Response('Missing target', { status: 400 });
+  const type: EntityType = body.type ?? 'domain';
+  const profileId = body.profileId ?? 'pasif-recon';
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: string, data: unknown) =>
+        controller.enqueue(encoder.encode(sse(event, data)));
+
+      try {
+        const report = await runScan(
+          registry,
+          profileId,
+          { type, value },
+          {
+            onTask: (task) => {
+              const evt: TaskEvent = {
+                checkId: task.checkId,
+                phase: task.phase,
+                mode: task.mode,
+                status: task.status,
+                durationMs: task.durationMs,
+                target: { type: task.targetEntity.type, value: task.targetEntity.value },
+                skippedReason: task.skippedReason,
+                error: task.error,
+                observations: task.result.observations.length,
+                findings: task.result.findings.length,
+              };
+              send('task', evt);
+            },
+          },
+        );
+
+        const entityTypes: Record<string, number> = {};
+        for (const e of report.entities) entityTypes[e.type] = (entityTypes[e.type] ?? 0) + 1;
+
+        const done: DoneEvent = {
+          counts: {
+            tasks: report.counts.tasks,
+            entities: report.counts.entities,
+            edges: report.counts.edges,
+            observations: report.counts.observations,
+            findings: report.counts.findings,
+          },
+          entityTypes,
+          findings: report.findings,
+        };
+        send('done', done);
+      } catch (err) {
+        send('error', { message: err instanceof Error ? err.message : String(err) });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    },
+  });
+}
