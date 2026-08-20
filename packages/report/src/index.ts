@@ -5,3 +5,5 @@
 export { renderMarkdown, renderReport } from './render.js';
 export { sha256Hex } from './digest.js';
 export type { ReportInput, ReportTask, RenderedReport } from './types.js';
+export { renderDiffMarkdown, summarizeDiff } from './diff.js';
+export type { DiffMeta } from './diff.js';

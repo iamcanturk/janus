@@ -66,5 +66,9 @@ export type { Profile } from './profile.js';
 export { runScan, selectChecks } from './scan.js';
 export type { ScanReport, ScanTaskReport, RunScanOptions } from './scan.js';
 
+// Diffing (monitoring)
+export { diffReports } from './diff.js';
+export type { ScanDiff, ScanSnapshot, DiffEntity } from './diff.js';
+
 // Logger
 export { nullLogger, createConsoleLogger } from './logger.js';

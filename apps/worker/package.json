@@ -9,6 +9,7 @@
     "dev": "tsc -b --watch",
     "start": "node dist/index.js",
     "scan": "tsx src/scan-cli.ts",
+    "monitor": "tsx src/monitor-cli.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"

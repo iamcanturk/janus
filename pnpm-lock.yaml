@@ -148,6 +148,9 @@ importers:
       '@janus/db':
         specifier: workspace:*
         version: link:../db
+      '@janus/report':
+        specifier: workspace:*
+        version: link:../report
       bullmq:
         specifier: ^5.34.5
         version: 5.81.3

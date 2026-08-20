@@ -5,7 +5,7 @@
  * store: the per-job entity graph, every task and its observations/findings.
  */
 
-import type { ScanReport, Target } from '@janus/core';
+import type { ScanReport, ScanSnapshot, Severity, Target } from '@janus/core';
 import { entityId } from '@janus/core';
 import type { Prisma, PrismaClient } from '../generated/client/index.js';
 import { toSeverity, toTaskStatus } from './mappers.js';
@@ -152,4 +152,46 @@ export async function getJobWithResults(db: PrismaClient, jobId: string) {
 /** Recent jobs, newest first. */
 export async function listJobs(db: PrismaClient, take = 50) {
   return db.job.findMany({ orderBy: { createdAt: 'desc' }, take });
+}
+
+function splitEntityKey(key: string): { type: string; value: string } {
+  const idx = key.indexOf(':');
+  return idx === -1
+    ? { type: 'unknown', value: key }
+    : { type: key.slice(0, idx), value: key.slice(idx + 1) };
+}
+
+/**
+ * The most recent completed scan of the same target+profile (excluding one job),
+ * as a diffable snapshot. Used by monitoring to compute what changed.
+ */
+export async function getPreviousSnapshot(
+  db: PrismaClient,
+  target: Target,
+  profileId: string,
+  excludeJobId: string,
+): Promise<ScanSnapshot | null> {
+  const job = await db.job.findFirst({
+    where: {
+      targetType: target.type,
+      targetValue: target.value,
+      profileId,
+      status: 'DONE',
+      id: { not: excludeJobId },
+    },
+    orderBy: { createdAt: 'desc' },
+    include: { entities: true, findings: true },
+  });
+  if (!job) return null;
+
+  return {
+    entities: job.entities.map((e) => ({ id: e.key, type: e.type, value: e.value })),
+    findings: job.findings.map((f) => ({
+      code: f.code,
+      title: f.title,
+      severity: f.severity.toLowerCase() as Severity,
+      entity: f.entityKey ? splitEntityKey(f.entityKey) : undefined,
+      description: f.description,
+    })),
+  };
 }
