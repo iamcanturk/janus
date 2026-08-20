@@ -38,6 +38,9 @@ importers:
       '@janus/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@janus/report':
+        specifier: workspace:*
+        version: link:../../packages/report
       '@janus/tools':
         specifier: workspace:*
         version: link:../../packages/tools
@@ -81,6 +84,9 @@ importers:
       '@janus/queue':
         specifier: workspace:*
         version: link:../../packages/queue
+      '@janus/report':
+        specifier: workspace:*
+        version: link:../../packages/report
     devDependencies:
       tsx:
         specifier: ^4.19.2
@@ -138,6 +144,16 @@ importers:
       ioredis:
         specifier: ^5.4.2
         version: 5.11.1
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
+
+  packages/report:
+    dependencies:
+      '@janus/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsx:
         specifier: ^4.19.2

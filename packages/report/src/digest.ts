@@ -1,0 +1,8 @@
+/** SHA-256 hex digest via Web Crypto — isomorphic (browser + Node 20+). */
+
+const encoder = new TextEncoder();
+
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}

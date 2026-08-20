@@ -57,6 +57,9 @@ janus/
 │   ├── core/         # check runner, entity graph, job model
 │   ├── checks/       # all modules (grouped by phase/mode)
 │   ├── tools/        # keyless toolbox (hash, jwt, cidr...)
+│   ├── db/           # Prisma persistence (jobs, entity graph, findings)
+│   ├── queue/        # BullMQ scan queue + worker
+│   ├── report/       # tamper-evident Markdown reports
 │   └── connectors/   # BYOK integrations (shodan, vt, otx, censys...)
 ├── docker-compose.yml
 └── .env.example      # BYOK key template
@@ -97,7 +100,11 @@ Development lands one phase at a time (each phase = a GitHub issue + PR):
 - [x] **Phase 5** — Active checks + safety gate: live host/port, opt-in
 - [x] **Phase 6** — Exposure + intel: security headers/TLS, CISA KEV
 - [x] **Phase 7** — Toolbox: hash, JWT, Base64, CIDR, IOC extractor
-- [ ] **Phase 8** — Evidence & report: SHA-256 + timestamp, Markdown/PDF
+- [x] **Phase 8** — Evidence & report: SHA-256 + timestamp, Markdown
+
+**MVP complete** 🎉 — core engine + entity graph + queue + profiles + checklist
+UI, passive & active modules behind the safety gate, exposure/intel findings,
+the keyless toolbox, and tamper-evident Markdown reports.
 
 ## License
 
