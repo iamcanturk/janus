@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { renderReport } from '@janus/report';
+import type { ReportInput } from '@janus/report';
 import { streamScan } from '@/lib/client';
 import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
 import { ScanForm } from './ScanForm';
@@ -11,6 +13,7 @@ export function ScanClient() {
   const [done, setDone] = useState<DoneEvent | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastReq, setLastReq] = useState<ScanRequest | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const onScan = useCallback(async (req: ScanRequest) => {
@@ -21,6 +24,7 @@ export function ScanClient() {
     setTasks([]);
     setDone(null);
     setError(null);
+    setLastReq(req);
     setRunning(true);
 
     try {
@@ -42,10 +46,45 @@ export function ScanClient() {
     }
   }, []);
 
+  const downloadReport = useCallback(async () => {
+    if (!done || !lastReq) return;
+    const input: ReportInput = {
+      target: { type: String(lastReq.type), value: lastReq.value },
+      profileId: lastReq.profileId,
+      generatedAt: new Date().toISOString(),
+      counts: done.counts,
+      entityTypes: done.entityTypes,
+      findings: done.findings,
+      tasks: tasks.map((t) => ({
+        checkId: t.checkId,
+        status: t.status,
+        target: t.target,
+        durationMs: t.durationMs,
+        skippedReason: t.skippedReason,
+      })),
+    };
+    const { markdown } = await renderReport(input);
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `janus-${lastReq.value}-${lastReq.profileId}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [done, lastReq, tasks]);
+
   return (
     <div className="space-y-6">
       <ScanForm disabled={running} onScan={onScan} />
       <Checklist tasks={tasks} done={done} running={running} error={error} />
+      {done && !running && (
+        <button
+          onClick={downloadReport}
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-500"
+        >
+          📄 Rapor indir (Markdown · SHA-256 imzalı)
+        </button>
+      )}
     </div>
   );
 }
