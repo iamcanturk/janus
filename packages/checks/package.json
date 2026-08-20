@@ -20,6 +20,7 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@janus/connectors": "workspace:*",
     "@janus/core": "workspace:*"
   },
   "devDependencies": {

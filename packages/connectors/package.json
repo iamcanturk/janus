@@ -16,9 +16,13 @@
     "dev": "tsc -b --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
     "@janus/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }

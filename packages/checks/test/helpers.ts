@@ -36,3 +36,8 @@ export function makeContext(...routes: Route[]): CheckContext {
 export function on(substring: string, res: Response): Route {
   return (url) => (url.includes(substring) ? res.clone() : undefined);
 }
+
+/** Return a copy of a context whose getKey resolves the given keys. */
+export function withKeys(ctx: CheckContext, keys: Record<string, string>): CheckContext {
+  return { ...ctx, getKey: (name: string) => keys[name] };
+}
