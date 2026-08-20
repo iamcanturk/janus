@@ -11,9 +11,31 @@
  */
 
 import { getProfile, runScan } from '@janus/core';
-import type { CheckConfig, EntityType } from '@janus/core';
+import type { CheckConfig, Edge, Entity, EntityType } from '@janus/core';
 import { createRegistry } from '@janus/checks';
-import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
+import type { DoneEvent, GraphView, ScanRequest, TaskEvent } from '@/lib/types';
+
+/** Nodes shown on the pivot canvas, capped so the graph stays readable. */
+const MAX_GRAPH_NODES = 250;
+/** Entity types de-prioritized when the graph is capped (noisy / low-pivot). */
+const LOW_PRIORITY = new Set(['url', 'dns_record']);
+
+function buildGraph(entities: readonly Entity[], edges: readonly Edge[]): GraphView {
+  const ordered = [...entities].sort((a, b) => {
+    const pa = LOW_PRIORITY.has(a.type) ? 1 : 0;
+    const pb = LOW_PRIORITY.has(b.type) ? 1 : 0;
+    return pa - pb;
+  });
+  const kept = ordered.slice(0, MAX_GRAPH_NODES);
+  const keptIds = new Set(kept.map((e) => e.id));
+  return {
+    nodes: kept.map((e) => ({ id: e.id, type: e.type, value: e.value })),
+    edges: edges
+      .filter((e) => keptIds.has(e.from) && keptIds.has(e.to))
+      .map((e) => ({ from: e.from, to: e.to, relation: e.relation })),
+    truncated: Math.max(0, entities.length - kept.length),
+  };
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -92,6 +114,7 @@ export async function POST(req: Request): Promise<Response> {
           },
           entityTypes,
           findings: report.findings,
+          graph: buildGraph(report.entities, report.edges),
         };
         send('done', done);
       } catch (err) {

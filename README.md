@@ -110,6 +110,8 @@ the keyless toolbox, and tamper-evident Markdown reports.
 
 - [x] **BYOK connectors** — VirusTotal, Shodan (full) behind keys; encrypted key
       storage (AES-256-GCM). Checks are skipped when no key is set.
+- [x] **Graph pivot canvas** — React Flow visualization of the entity graph;
+      click a domain/subdomain/ip node to continue the scan from it.
 
 ## License
 
