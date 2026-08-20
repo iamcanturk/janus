@@ -16,6 +16,25 @@ export interface TaskEvent {
   readonly findings: number;
 }
 
+export interface GraphNode {
+  readonly id: string;
+  readonly type: string;
+  readonly value: string;
+}
+
+export interface GraphEdge {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+}
+
+export interface GraphView {
+  readonly nodes: readonly GraphNode[];
+  readonly edges: readonly GraphEdge[];
+  /** Number of nodes dropped to keep the canvas readable (0 = complete). */
+  readonly truncated: number;
+}
+
 /** Final summary streamed when the scan finishes. */
 export interface DoneEvent {
   readonly counts: {
@@ -27,6 +46,7 @@ export interface DoneEvent {
   };
   readonly entityTypes: Readonly<Record<string, number>>;
   readonly findings: readonly Finding[];
+  readonly graph: GraphView;
 }
 
 export interface ErrorEvent {
