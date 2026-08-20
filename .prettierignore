@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+
+# Author-maintained design document — keep as written
+PROJECT.md

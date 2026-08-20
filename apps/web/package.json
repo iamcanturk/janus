@@ -1,0 +1,10 @@
+{
+  "name": "@janus/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"[janus] web app is scaffolded in Phase 4\" && exit 0",
+    "build": "echo \"[janus] web app is scaffolded in Phase 4\" && exit 0",
+    "lint": "echo \"no-op until Phase 4\" && exit 0"
+  }
+}

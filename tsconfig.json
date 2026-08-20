@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/checks" },
+    { "path": "./packages/tools" },
+    { "path": "./packages/connectors" },
+    { "path": "./apps/worker" }
+  ]
+}
