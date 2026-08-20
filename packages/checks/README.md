@@ -15,17 +15,23 @@ appending it to `allChecks` — nothing in the core changes.
 | `dns.records`       | recon | domain, sub | dns_record, ip     | DoH (Cloudflare)  |
 | `wayback.urls`      | recon | domain      | url                | Wayback CDX       |
 | `shodan.internetdb` | recon | ip          | port, service, cve | Shodan InternetDB |
+| `intel.cisa_kev`    | intel | cve         | —                  | CISA KEV catalog  |
 
 ### Active — sends live packets; only under a profile with `allowActive`
 
-| id                | phase       | risk   | input           | produces            |
-| ----------------- | ----------- | ------ | --------------- | ------------------- |
-| `host.http_probe` | enumeration | low    | domain, sub, ip | service, technology |
-| `net.port_scan`   | enumeration | medium | ip              | port, service       |
+| id                      | phase       | risk   | input           | produces            |
+| ----------------------- | ----------- | ------ | --------------- | ------------------- |
+| `host.http_probe`       | enumeration | low    | domain, sub, ip | service, technology |
+| `net.port_scan`         | enumeration | medium | ip              | port, service       |
+| `http.security_headers` | exposure    | low    | domain, sub, ip | —                   |
+| `tls.health`            | exposure    | low    | domain, sub     | certificate         |
 
 `dns.records` raises **findings** for a missing SPF or DMARC policy;
-`shodan.internetdb` raises a finding per known CVE. Everything else is an
-observation — raw data never auto-promotes to a finding.
+`shodan.internetdb` raises a finding per known CVE; `intel.cisa_kev` elevates a
+CVE that is actively exploited (CISA KEV) to a **critical** finding;
+`http.security_headers` and `tls.health` flag missing hardening headers and
+expired/self-signed certificates. Everything else is an observation — raw data
+never auto-promotes to a finding.
 
 Active checks are refused by the runner unless the profile sets `allowActive`
 (only `bug-bounty-surface` does), and the web UI gates them behind an explicit

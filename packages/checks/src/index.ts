@@ -15,6 +15,9 @@ import { waybackCheck } from './recon/wayback.js';
 import { internetdbCheck } from './recon/internetdb.js';
 import { httpProbeCheck } from './enumeration/httpProbe.js';
 import { portScanCheck } from './enumeration/portScan.js';
+import { cisaKevCheck } from './intel/cisaKev.js';
+import { securityHeadersCheck } from './exposure/securityHeaders.js';
+import { tlsHealthCheck } from './exposure/tlsHealth.js';
 
 /** Every check shipped with Janus. Append new modules here. */
 export const allChecks: readonly CheckDefinition[] = [
@@ -24,9 +27,12 @@ export const allChecks: readonly CheckDefinition[] = [
   dnsCheck,
   waybackCheck,
   internetdbCheck,
+  cisaKevCheck,
   // Active (only run under a profile with allowActive)
   httpProbeCheck,
   portScanCheck,
+  securityHeadersCheck,
+  tlsHealthCheck,
 ];
 
 /** Build a registry pre-loaded with every shipped check. */
@@ -39,6 +45,9 @@ export function createRegistry(): CheckRegistry {
 export { rdapCheck, crtshCheck, dnsCheck, waybackCheck, internetdbCheck };
 export { httpProbeCheck } from './enumeration/httpProbe.js';
 export { portScanCheck } from './enumeration/portScan.js';
+export { securityHeadersCheck } from './exposure/securityHeaders.js';
+export { tlsHealthCheck } from './exposure/tlsHealth.js';
+export { cisaKevCheck, resetKevCache } from './intel/cisaKev.js';
 export { mapLimit } from './net/limit.js';
 export { tcpProbe, COMMON_PORTS, serviceName } from './net/tcp.js';
 export type { PortProbe } from './net/tcp.js';
