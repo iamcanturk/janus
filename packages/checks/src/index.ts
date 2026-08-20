@@ -16,6 +16,8 @@ import { internetdbCheck } from './recon/internetdb.js';
 import { httpProbeCheck } from './enumeration/httpProbe.js';
 import { portScanCheck } from './enumeration/portScan.js';
 import { cisaKevCheck } from './intel/cisaKev.js';
+import { virustotalDomainCheck } from './intel/virustotal.js';
+import { shodanHostCheck } from './intel/shodanHost.js';
 import { securityHeadersCheck } from './exposure/securityHeaders.js';
 import { tlsHealthCheck } from './exposure/tlsHealth.js';
 
@@ -28,6 +30,9 @@ export const allChecks: readonly CheckDefinition[] = [
   waybackCheck,
   internetdbCheck,
   cisaKevCheck,
+  // Passive, BYOK (skipped without a key)
+  virustotalDomainCheck,
+  shodanHostCheck,
   // Active (only run under a profile with allowActive)
   httpProbeCheck,
   portScanCheck,
@@ -48,6 +53,8 @@ export { portScanCheck } from './enumeration/portScan.js';
 export { securityHeadersCheck } from './exposure/securityHeaders.js';
 export { tlsHealthCheck } from './exposure/tlsHealth.js';
 export { cisaKevCheck, resetKevCache } from './intel/cisaKev.js';
+export { virustotalDomainCheck } from './intel/virustotal.js';
+export { shodanHostCheck } from './intel/shodanHost.js';
 export { mapLimit } from './net/limit.js';
 export { tcpProbe, COMMON_PORTS, serviceName } from './net/tcp.js';
 export type { PortProbe } from './net/tcp.js';

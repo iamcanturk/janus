@@ -94,6 +94,9 @@ importers:
 
   packages/checks:
     dependencies:
+      '@janus/connectors':
+        specifier: workspace:*
+        version: link:../connectors
       '@janus/core':
         specifier: workspace:*
         version: link:../core
@@ -107,6 +110,10 @@ importers:
       '@janus/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.12
 
   packages/core:
     devDependencies:

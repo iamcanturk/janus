@@ -106,6 +106,11 @@ Development lands one phase at a time (each phase = a GitHub issue + PR):
 UI, passive & active modules behind the safety gate, exposure/intel findings,
 the keyless toolbox, and tamper-evident Markdown reports.
 
+### Beyond the MVP
+
+- [x] **BYOK connectors** — VirusTotal, Shodan (full) behind keys; encrypted key
+      storage (AES-256-GCM). Checks are skipped when no key is set.
+
 ## License
 
 [MIT](./LICENSE) © Yusuf Can Türk
