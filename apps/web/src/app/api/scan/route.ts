@@ -8,7 +8,7 @@
  * one is available (best-effort; the scan works without it).
  */
 
-import { PHASES, runScan } from '@janus/core';
+import { PHASES, entityId, runScan } from '@janus/core';
 import type { CheckConfig, EntityType, Profile } from '@janus/core';
 import { createRegistry } from '@janus/checks';
 import { createJob, markJobDone, persistScanReport } from '@janus/db';
@@ -87,6 +87,17 @@ export async function POST(req: Request): Promise<Response> {
                 error: task.error,
                 observations: task.result.observations.length,
                 findings: task.result.findings.length,
+                entities: task.result.entities.slice(0, 400).map((e) => ({
+                  id: entityId(e),
+                  type: e.type,
+                  value: e.value,
+                })),
+                edges: task.result.edges.slice(0, 400).map((e) => ({
+                  from: entityId(e.from),
+                  to: entityId(e.to),
+                  relation: e.relation,
+                })),
+                newFindings: [...task.result.findings],
               };
               send('task', evt);
             },

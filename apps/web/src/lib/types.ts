@@ -14,6 +14,10 @@ export interface TaskEvent {
   readonly error?: string;
   readonly observations: number;
   readonly findings: number;
+  /** Entities/edges/findings this task produced — so the UI fills live. */
+  readonly entities: readonly GraphNode[];
+  readonly edges: readonly GraphEdge[];
+  readonly newFindings: readonly Finding[];
 }
 
 export interface GraphNode {
