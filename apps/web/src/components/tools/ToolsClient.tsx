@@ -13,6 +13,8 @@ import {
   parseCidr,
   extractIocs,
   buildDorks,
+  searchUrl,
+  SEARCH_ENGINES,
   passwordStrength,
   generatePassword,
   generateToken,
@@ -299,32 +301,31 @@ function IocTool() {
 
 function DorkTool() {
   const [value, setValue] = useState('');
+  const [engine, setEngine] = useState(SEARCH_ENGINES[0]!.id);
   const dorks = value.trim() ? buildDorks(value) : null;
-  const list = (title: string, items: ReturnType<typeof buildDorks>['google']) => (
-    <div className="space-y-1.5">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
-      {items.map((d) => (
-        <div
-          key={d.query}
-          className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5"
-        >
-          <div className="min-w-0 flex-1">
-            <div className="text-sm text-slate-200">{d.label}</div>
-            <div className="truncate font-mono text-[11px] text-slate-500">{d.query}</div>
-          </div>
-          <CopyButton text={d.query} />
-          <a
-            href={d.url}
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 text-xs text-cyan-400 hover:text-cyan-300"
-          >
-            aç ↗
-          </a>
-        </div>
-      ))}
+  const eng = SEARCH_ENGINES.find((e) => e.id === engine) ?? SEARCH_ENGINES[0]!;
+
+  const row = (d: { label: string; query: string; url?: string }) => (
+    <div
+      key={d.query}
+      className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="text-sm text-slate-200">{d.label}</div>
+        <div className="truncate font-mono text-[11px] text-slate-500">{d.query}</div>
+      </div>
+      <CopyButton text={d.query} />
+      <a
+        href={d.url ?? searchUrl(eng.base, d.query)}
+        target="_blank"
+        rel="noreferrer"
+        className="shrink-0 text-xs text-cyan-400 hover:text-cyan-300"
+      >
+        aç ↗
+      </a>
     </div>
   );
+
   return (
     <div className="space-y-3">
       <Field label="Hedef alan adı">
@@ -337,8 +338,34 @@ function DorkTool() {
       </Field>
       {dorks && (
         <div className="space-y-4">
-          {list('Google', dorks.google)}
-          {list('GitHub', dorks.github)}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Web dork&apos;ları
+              </span>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                motor
+                <select
+                  value={engine}
+                  onChange={(e) => setEngine(e.target.value)}
+                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-slate-200 outline-none focus:border-cyan-500"
+                >
+                  {SEARCH_ENGINES.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {dorks.web.map(row)}
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              GitHub
+            </span>
+            {dorks.github.map(row)}
+          </div>
         </div>
       )}
     </div>

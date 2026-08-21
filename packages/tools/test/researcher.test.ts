@@ -2,6 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildDorks,
+  searchUrl,
+  SEARCH_ENGINES,
   passwordStrength,
   generatePassword,
   generateToken,
@@ -11,12 +13,18 @@ import {
 } from '../src/index.js';
 
 describe('buildDorks', () => {
-  it('builds google + github dorks with encoded urls', () => {
-    const { google, github } = buildDorks('example.com');
-    assert.ok(google.length >= 6 && github.length >= 3);
-    assert.ok(google[0]!.url.startsWith('https://www.google.com/search?q='));
-    assert.ok(google.some((d) => d.query.includes('site:example.com')));
-    assert.ok(github[0]!.url.includes('github.com/search'));
+  it('builds web + github dorks', () => {
+    const { web, github } = buildDorks('example.com');
+    assert.ok(web.length >= 6 && github.length >= 3);
+    assert.ok(web.some((d) => d.query.includes('site:example.com')));
+    assert.ok(github[0]!.url!.includes('github.com/search'));
+  });
+
+  it('renders a dork query into every engine', () => {
+    assert.ok(SEARCH_ENGINES.length >= 6);
+    const url = searchUrl(SEARCH_ENGINES[1]!.base, 'site:example.com');
+    assert.ok(url.startsWith('https://www.bing.com/search?q='));
+    assert.ok(url.includes('site%3Aexample.com'));
   });
 });
 
