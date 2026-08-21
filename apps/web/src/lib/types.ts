@@ -55,6 +55,48 @@ export interface ErrorEvent {
 
 export interface ScanRequest {
   readonly value: string;
-  readonly type: EntityType;
+  readonly type?: EntityType;
+  /** Run a whole profile… */
+  readonly profileId?: string;
+  /** …or run just these checks (single query / staged). */
+  readonly checkIds?: readonly string[];
+  /** Entities already discovered, so this run pivots off them. */
+  readonly seeds?: readonly GraphNode[];
+}
+
+/** Check metadata for the module catalog. */
+export interface CheckMeta {
+  readonly id: string;
+  readonly phase: string;
+  readonly mode: 'passive' | 'active';
+  readonly risk?: 'low' | 'medium' | 'high';
+  readonly needsKey: boolean;
+  readonly inputs: readonly string[];
+  readonly title: string;
+  readonly description: string;
+}
+
+export interface ProfileMeta {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly allowActive: boolean;
+  readonly checkIds: readonly string[];
+}
+
+export interface CatalogResponse {
+  readonly checks: readonly CheckMeta[];
+  readonly profiles: readonly ProfileMeta[];
+}
+
+/** A saved scan in the history list. */
+export interface ScanSummary {
+  readonly id: string;
+  readonly targetType: string;
+  readonly targetValue: string;
   readonly profileId: string;
+  readonly status: string;
+  readonly createdAt: string;
+  readonly findings: number;
+  readonly entities: number;
 }

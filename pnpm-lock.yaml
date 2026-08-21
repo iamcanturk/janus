@@ -38,6 +38,9 @@ importers:
       '@janus/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@janus/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@janus/report':
         specifier: workspace:*
         version: link:../../packages/report

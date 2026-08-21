@@ -1,43 +1,26 @@
-import Link from 'next/link';
-import { ScanClient } from '@/components/ScanClient';
+import { Nav } from '@/components/Nav';
+import { ScanWorkspace } from '@/components/workspace/ScanWorkspace';
 
 export default function Home() {
   return (
-    <main className="mx-auto min-h-screen max-w-3xl px-4 py-10 sm:py-16">
-      <header className="mb-8 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl" aria-hidden>
-            🜏
-          </span>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Janus</h1>
-            <p className="text-sm text-slate-400">
-              Bir siber güvenlikçinin el çantası — pasif keşif &amp; zafiyet tarama.
-            </p>
-          </div>
-        </div>
-        <Link href="/araclar" className="shrink-0 text-sm text-cyan-400 hover:text-cyan-300">
-          El Çantası →
-        </Link>
-      </header>
+    <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+      <Nav active="scan" />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 sm:p-6">
-        <ScanClient />
-      </section>
+      <div className="mb-5">
+        <h1 className="text-xl font-semibold text-slate-100">Saldırı yüzeyi keşfi</h1>
+        <p className="text-sm text-slate-400">
+          Bir hedef gir, modülleri tek tek ya da profil olarak çalıştır; grafik büyüsün, sonuçlar
+          kaydedilsin.
+        </p>
+      </div>
 
-      <footer className="mt-8 space-y-2 text-xs text-slate-500">
-        <p>
-          ⚖️ Yalnızca{' '}
-          <strong className="text-slate-400">
-            sahibi olduğun ya da test etmeye yetkili olduğun
-          </strong>{' '}
-          varlıklarda kullan. Kişisel veriler KVKK/GDPR kapsamındadır. Aktif taramadan kullanıcı
-          sorumludur.
-        </p>
-        <p>
-          Pasif modüller hedefe <strong className="text-slate-400">tek paket bile göndermez</strong>
-          ; yalnızca üçüncü taraf/açık kaynaklardan veri toplar.
-        </p>
+      <ScanWorkspace />
+
+      <footer className="mt-10 border-t border-slate-800 pt-4 text-xs text-slate-500">
+        ⚖️ Yalnızca{' '}
+        <strong className="text-slate-400">sahibi olduğun ya da test etmeye yetkili olduğun</strong>{' '}
+        varlıklarda kullan. Pasif modüller hedefe tek paket bile göndermez; aktif modüller kırmızı
+        onay arkasındadır. Kişisel veriler KVKK/GDPR kapsamındadır.
       </footer>
     </main>
   );

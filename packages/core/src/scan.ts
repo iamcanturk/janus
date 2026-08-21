@@ -12,7 +12,7 @@
  */
 
 import type { CheckConfig, CheckContext, CheckDefinition, Target } from './types/check.js';
-import type { Entity, Edge, EntityRef } from './types/entity.js';
+import type { Entity, Edge, EntityRef, EntityInput } from './types/entity.js';
 import type { Observation, Finding } from './types/finding.js';
 import type { CheckRunStatus } from './types/check.js';
 import type { CheckRunReport } from './runner.js';
@@ -67,6 +67,8 @@ export interface RunScanOptions {
   readonly maxRounds?: number;
   /** Streaming callback invoked as each task completes (drives the live UI). */
   readonly onTask?: (task: ScanTaskReport) => void;
+  /** Entities already known (e.g. from earlier incremental runs) to pivot off. */
+  readonly seeds?: readonly EntityInput[];
 }
 
 function emptyStatusCounts(): Record<CheckRunStatus, number> {
@@ -92,6 +94,8 @@ export async function runScan(
 
   const graph = new EntityGraph();
   graph.addEntity({ type: target.type, value: target.value }, TARGET_SOURCE);
+  // Seed previously-discovered entities so an incremental run pivots off them.
+  for (const seed of options.seeds ?? []) graph.addEntity(seed, TARGET_SOURCE);
 
   const done = new Set<string>();
   const tasks: ScanTaskReport[] = [];

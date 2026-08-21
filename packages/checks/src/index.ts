@@ -9,7 +9,7 @@ import { CheckRegistry } from '@janus/core';
 import type { CheckDefinition } from '@janus/core';
 
 import { rdapCheck } from './scope/rdap.js';
-import { crtshCheck } from './recon/crtsh.js';
+import { crtNameCheck } from './recon/crtName.js';
 import { dnsCheck } from './recon/dns.js';
 import { waybackCheck } from './recon/wayback.js';
 import { internetdbCheck } from './recon/internetdb.js';
@@ -25,7 +25,7 @@ import { tlsHealthCheck } from './exposure/tlsHealth.js';
 export const allChecks: readonly CheckDefinition[] = [
   // Passive
   rdapCheck,
-  crtshCheck,
+  crtNameCheck,
   dnsCheck,
   waybackCheck,
   internetdbCheck,
@@ -47,7 +47,7 @@ export function createRegistry(): CheckRegistry {
   return registry;
 }
 
-export { rdapCheck, crtshCheck, dnsCheck, waybackCheck, internetdbCheck };
+export { rdapCheck, crtNameCheck, dnsCheck, waybackCheck, internetdbCheck };
 export { httpProbeCheck } from './enumeration/httpProbe.js';
 export { portScanCheck } from './enumeration/portScan.js';
 export { securityHeadersCheck } from './exposure/securityHeaders.js';
