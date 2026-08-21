@@ -20,13 +20,23 @@ import { virustotalDomainCheck } from './intel/virustotal.js';
 import { shodanHostCheck } from './intel/shodanHost.js';
 import { securityHeadersCheck } from './exposure/securityHeaders.js';
 import { tlsHealthCheck } from './exposure/tlsHealth.js';
+import { caaCheck } from './recon/caa.js';
+import { reverseDnsCheck } from './recon/reverseDns.js';
+import { asnCheck } from './scope/asn.js';
+import { gitExposureCheck } from './exposure/gitExposure.js';
+import { envExposureCheck } from './exposure/envExposure.js';
+import { robotsCheck } from './enumeration/robots.js';
+import { securityTxtCheck } from './exposure/securityTxt.js';
 
 /** Every check shipped with Janus. Append new modules here. */
 export const allChecks: readonly CheckDefinition[] = [
   // Passive
+  asnCheck,
   rdapCheck,
   crtNameCheck,
   dnsCheck,
+  caaCheck,
+  reverseDnsCheck,
   waybackCheck,
   internetdbCheck,
   cisaKevCheck,
@@ -36,8 +46,12 @@ export const allChecks: readonly CheckDefinition[] = [
   // Active (only run under a profile with allowActive)
   httpProbeCheck,
   portScanCheck,
+  robotsCheck,
   securityHeadersCheck,
   tlsHealthCheck,
+  gitExposureCheck,
+  envExposureCheck,
+  securityTxtCheck,
 ];
 
 /** Build a registry pre-loaded with every shipped check. */
@@ -55,6 +69,13 @@ export { tlsHealthCheck } from './exposure/tlsHealth.js';
 export { cisaKevCheck, resetKevCache } from './intel/cisaKev.js';
 export { virustotalDomainCheck } from './intel/virustotal.js';
 export { shodanHostCheck } from './intel/shodanHost.js';
+export { caaCheck } from './recon/caa.js';
+export { reverseDnsCheck } from './recon/reverseDns.js';
+export { asnCheck } from './scope/asn.js';
+export { gitExposureCheck } from './exposure/gitExposure.js';
+export { envExposureCheck } from './exposure/envExposure.js';
+export { robotsCheck } from './enumeration/robots.js';
+export { securityTxtCheck } from './exposure/securityTxt.js';
 export { mapLimit } from './net/limit.js';
 export { tcpProbe, COMMON_PORTS, serviceName } from './net/tcp.js';
 export type { PortProbe } from './net/tcp.js';

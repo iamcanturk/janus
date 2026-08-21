@@ -1,121 +1,138 @@
 <div align="center">
 
-# Janus
+# 🜏 Janus
 
-**Web-based, self-hostable, BYOK modular OSINT & vulnerability scanning platform.**
+**A cybersecurity researcher's toolbox — in one self-hostable web app.**
 
-_"A cybersecurity researcher's toolbox."_
+Web-based · self-hosted · BYOK · modular OSINT & vulnerability scanning.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Status: WIP](https://img.shields.io/badge/status-work%20in%20progress-orange.svg)](#roadmap)
+![Self-hosted](https://img.shields.io/badge/deploy-self--hosted-06b6d4.svg)
+![No account](https://img.shields.io/badge/accounts-none-22c55e.svg)
 
 </div>
 
 ---
 
-Janus is named after the two-faced Roman god: one face looks outward/backward
-(**passive** observation), the other looks forward/at the target (**active**
-recon). This duality is the core of the whole architecture.
+Janus is named after the two-faced Roman god: one face looks outward (**passive**
+observation), the other looks at the target (**active** recon). That duality is
+the core of the whole design — and the safety model.
 
-> ⚠️ **Legal notice:** Use Janus only against assets you own or are explicitly
-> authorized to test. Active modules send live traffic to the target and are
-> always opt-in behind an explicit confirmation. You are responsible for
-> unauthorized scanning. See [`PROJECT.md`](./PROJECT.md) for the full ruleset.
+You give Janus a **target** (a domain or an IP — it auto-detects which), pick how
+deep to go, and it maps the attack surface into a live **entity graph** you can
+pivot through, turning observations into findings and a signed report.
 
-## What it does
+> ⚠️ **Use only against assets you own or are explicitly authorized to test.**
+> Passive modules send _zero_ packets to the target; active modules send live
+> traffic and sit behind an explicit confirmation. You are responsible for
+> unauthorized scanning. Personal data is subject to KVKK/GDPR.
 
-Everything a researcher needs while mapping the attack surface of a target
-(domain / IP / organization) and scanning for vulnerabilities — collected in a
-single web UI as a live checklist. Every control is a **module** (`check`); the
-system grows by adding modules, not by touching the core.
+## Why Janus
 
-- **Passive / active split** — a passive check sends _zero_ packets to the
-  target; an active check sends live requests behind a red opt-in gate.
-- **Entity graph** — all output is written to a shared graph
-  (`domain → subdomain → ip → asn → org → ...`) you can pivot through.
-- **Job & queue** — scans run as background jobs; results stream into the UI.
-- **BYOK** — bring your own keys for premium sources; keyless sources work out
-  of the box.
+- **Passive by default, active on purpose.** A passive check never touches the
+  target — it only reads third-party/open sources (CT logs, RDAP, DoH, Wayback,
+  Shodan InternetDB, CISA KEV…). Active checks (live host probe, port scan,
+  `.git`/`.env` exposure…) are refused unless you opt in — three independent
+  gates: the runner, a compile-time `risk` requirement, and a red UI confirm.
+- **One target, staged scanning.** Run a single check, a whole phase, or a
+  profile. Results accumulate and each run _pivots off_ what earlier runs found
+  (`domain → subdomain → ip → ports → CVEs → …`).
+- **An entity graph you can pivot.** Every result flows into a shared graph;
+  click a node to continue from it.
+- **Observations ≠ findings.** Raw data never silently becomes a finding — the
+  split is kept in the UI, the graph and the report.
+- **Bring your own keys.** Keyless sources work out of the box; premium
+  connectors (VirusTotal, Shodan) light up when you add a key and are skipped
+  otherwise. Keys are stored encrypted (AES-256-GCM) and never logged.
+- **Self-hosted, no accounts.** Everyone runs their own instance. No multi-user
+  auth, no data leaving your box.
+- **Reports & monitoring.** Tamper-evident Markdown (SHA-256) + printable PDF;
+  scheduled re-scans that diff against the previous run and notify on change.
+- **A keyless toolbox.** Base64/Hex/URL, hashing, JWT decode, CIDR calculator and
+  an IOC extractor — all running entirely in your browser.
+- **Light & dark**, follows your system.
 
-See [`PROJECT.md`](./PROJECT.md) for the full design, contracts and rules.
+## Modules
 
-## Tech stack
+Passive (keyless unless marked BYOK) — **zero packets to the target**:
 
-pnpm workspace + Turborepo · Next.js 15 (web) · Node worker · BullMQ + Redis ·
-PostgreSQL + Prisma · Docker Compose.
+| id                               | phase | produces           | source            |
+| -------------------------------- | ----- | ------------------ | ----------------- |
+| `net.asn`                        | scope | asn                | RIPEstat          |
+| `rdap.registration`              | scope | org                | RDAP              |
+| `subdomain.crtname`              | recon | subdomain          | crt.name (CT)     |
+| `dns.records`                    | recon | dns_record, ip     | DoH — +SPF/DMARC  |
+| `dns.caa`                        | recon | —                  | DoH               |
+| `net.reverse_dns`                | recon | domain             | DoH (PTR)         |
+| `wayback.urls`                   | recon | url                | Wayback CDX       |
+| `shodan.internetdb`              | recon | port, service, cve | Shodan InternetDB |
+| `intel.cisa_kev`                 | intel | —                  | CISA KEV catalog  |
+| `intel.virustotal_domain` · BYOK | intel | —                  | VirusTotal        |
+| `intel.shodan_host` · BYOK       | recon | port, org, cve     | Shodan            |
 
-UI copy is Turkish; code, identifiers and commit messages are English.
+Active — **sends live packets; only under a profile with `allowActive`**:
 
-## Repository layout
+| id                      | phase       | risk   | produces            |
+| ----------------------- | ----------- | ------ | ------------------- |
+| `host.http_probe`       | enumeration | low    | service, technology |
+| `net.port_scan`         | enumeration | medium | port, service       |
+| `http.robots`           | enumeration | low    | url                 |
+| `http.security_headers` | exposure    | low    | —                   |
+| `tls.health`            | exposure    | low    | certificate         |
+| `http.git_exposure`     | exposure    | medium | —                   |
+| `http.env_exposure`     | exposure    | high   | —                   |
+| `http.security_txt`     | exposure    | low    | —                   |
 
-```
-janus/
-├── apps/
-│   ├── web/          # Next.js UI
-│   └── worker/       # queue consumer
-├── packages/
-│   ├── core/         # check runner, entity graph, job model
-│   ├── checks/       # all modules (grouped by phase/mode)
-│   ├── tools/        # keyless toolbox (hash, jwt, cidr...)
-│   ├── db/           # Prisma persistence (jobs, entity graph, findings)
-│   ├── queue/        # BullMQ scan queue + worker
-│   ├── report/       # tamper-evident Markdown reports
-│   └── connectors/   # BYOK integrations (shodan, vt, otx, censys...)
-├── docker-compose.yml
-└── .env.example      # BYOK key template
-```
+Adding a module means adding one file and appending it to a list — the core
+never changes. See [`packages/checks`](./packages/checks).
 
-## Getting started
+## Profiles
 
-> Scaffolding is landing phase by phase — see the roadmap below.
+- **Pasif Keşif** — passive phases only; sends nothing to the target.
+- **Bug Bounty Yüzeyi** — passive + active enumeration/surface (authorized-use
+  assumption); the only profile that runs active checks.
+- **Kendi Varlığım (İzleme)** — periodic passive monitoring that diffs runs.
+
+## Quick start
 
 ```bash
 pnpm install
-cp .env.example .env
-docker compose up -d   # postgres + redis
-pnpm dev
+pnpm --filter @janus/core --filter @janus/checks build
+pnpm --filter @janus/web dev        # → http://localhost:3000
 ```
 
-### Try a passive scan now (no infra needed)
-
-The passive modules run end to end without Postgres or Redis:
+Try a passive scan from the CLI without any web server or database:
 
 ```bash
-pnpm --filter @janus/worker scan example.com
+pnpm --filter @janus/worker scan example.com --report report.md
 ```
 
-This queries only third-party/open sources (crt.sh, RDAP, DoH, Wayback, Shodan
-InternetDB) and sends **zero packets to the target**. Only scan assets you own
-or are authorized to test.
+Saved scan history is optional — it uses PostgreSQL. Bring it up (plus Redis for
+the job queue) with Docker; the app degrades gracefully without it:
 
-## Roadmap
+```bash
+cp .env.example .env
+docker compose up -d
+pnpm --filter @janus/db db:deploy
+```
 
-Development lands one phase at a time (each phase = a GitHub issue + PR):
+## Tech stack
 
-- [x] **Phase 0** — Bootstrap: monorepo, tooling, Docker Compose
-- [x] **Phase 1** — Core contract: check schema, entity graph, runner
-- [x] **Phase 2** — Persistence + queue: Prisma schema, BullMQ, worker, profiles
-- [x] **Phase 3** — Passive checks: crt.sh, RDAP/ASN, DNS, Wayback, InternetDB
-- [x] **Phase 4** — Web UI: target input, profile select, live checklist
-- [x] **Phase 5** — Active checks + safety gate: live host/port, opt-in
-- [x] **Phase 6** — Exposure + intel: security headers/TLS, CISA KEV
-- [x] **Phase 7** — Toolbox: hash, JWT, Base64, CIDR, IOC extractor
-- [x] **Phase 8** — Evidence & report: SHA-256 + timestamp, Markdown
+pnpm workspace + Turborepo · Next.js 15 (App Router) + Tailwind v4 · React Flow ·
+Node worker · BullMQ + Redis · PostgreSQL + Prisma · Docker Compose. TypeScript
+throughout, ~100 tests. UI copy is Turkish; code and commits are English.
 
-**MVP complete** 🎉 — core engine + entity graph + queue + profiles + checklist
-UI, passive & active modules behind the safety gate, exposure/intel findings,
-the keyless toolbox, and tamper-evident Markdown reports.
+See [`PROJECT.md`](./PROJECT.md) for the full design, contracts and rules.
 
-### Beyond the MVP
+## Author
 
-- [x] **BYOK connectors** — VirusTotal, Shodan (full) behind keys; encrypted key
-      storage (AES-256-GCM). Checks are skipped when no key is set.
-- [x] **Graph pivot canvas** — React Flow visualization of the entity graph;
-      click a domain/subdomain/ip node to continue the scan from it.
-- [x] **Monitoring & diff** — `diffReports` between runs, repeatable scheduled
-      scans (`kendi-varligim-monitor`), notify-on-change (log/webhook).
-- [x] **PDF export** — print-friendly HTML report; "PDF (yazdır)" saves as PDF
-      via the browser (no PDF dependency).
+**Yusuf Can Türk** — Application Security Engineer
+
+[🌐 iamcanturk.dev](https://iamcanturk.dev) ·
+[𝕏 @iamcanturk](https://x.com/iamcanturk) ·
+[in LinkedIn](https://www.linkedin.com/in/yusufcanturk/) ·
+[GitHub](https://github.com/iamcanturk) ·
+[Instagram](https://www.instagram.com/iamcanturk/)
 
 ## License
 
