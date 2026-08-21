@@ -56,6 +56,9 @@ export async function GET(
       error: t.error ?? undefined,
       observations: t.observations.length,
       findings: t.findings.length,
+      entities: [],
+      edges: [],
+      newFindings: [],
     }));
 
     const graph = buildGraphView(

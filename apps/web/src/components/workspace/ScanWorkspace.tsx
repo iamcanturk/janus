@@ -17,7 +17,7 @@ import type {
 } from '@/lib/types';
 import { TargetBar } from './TargetBar';
 import { ModuleCatalog, type CheckState } from './ModuleCatalog';
-import { ResultsPanel } from './ResultsPanel';
+import { Dashboard } from '../dashboard/Dashboard';
 import { HistoryList } from './HistoryList';
 import type { CheckRunStatus } from '@janus/core';
 
@@ -120,6 +120,12 @@ export function ScanWorkspace() {
                 task.status,
               );
               acc.current.tasks.push(task);
+              // Merge what this task produced so the dashboard fills live.
+              for (const n of task.entities) acc.current.nodes.set(n.id, n);
+              for (const e of task.edges)
+                acc.current.edges.set(`${e.from}|${e.relation}|${e.to}`, e);
+              for (const f of task.newFindings)
+                acc.current.findings.set(`${f.code}|${f.entity?.value ?? ''}`, f);
               rerender();
             },
             onDone: (done) => {
@@ -337,11 +343,12 @@ export function ScanWorkspace() {
         </div>
 
         <div className="space-y-3">
-          <ResultsPanel
+          <Dashboard
+            target={{ type: detectType(value) === 'ip' ? 'ip' : 'domain', value: value.trim() }}
             counts={counts}
             findings={findings}
+            nodes={nodes}
             graph={{ nodes, edges, truncated: 0 }}
-            tasks={tasks}
             running={running}
             hasRun={hasRun}
             onPivot={onPivot}

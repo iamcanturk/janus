@@ -12,20 +12,16 @@ import {
   decodeJwt,
   parseCidr,
   extractIocs,
+  buildDorks,
+  passwordStrength,
+  generatePassword,
+  generateToken,
+  uuidv4,
+  buildTyposquats,
+  convertTime,
 } from '@janus/tools';
 import { CopyButton } from './CopyButton';
-
-type ToolId = 'base64' | 'hex' | 'url' | 'hash' | 'jwt' | 'cidr' | 'ioc';
-
-const TOOLS: { id: ToolId; label: string; hint: string }[] = [
-  { id: 'base64', label: 'Base64', hint: 'Encode / decode' },
-  { id: 'hex', label: 'Hex', hint: 'Encode / decode' },
-  { id: 'url', label: 'URL', hint: 'Encode / decode' },
-  { id: 'hash', label: 'Hash', hint: 'SHA-1/256/384/512' },
-  { id: 'jwt', label: 'JWT', hint: 'Decode + uyarılar' },
-  { id: 'cidr', label: 'CIDR', hint: 'IPv4 hesaplayıcı' },
-  { id: 'ioc', label: 'IOC çıkarıcı', hint: 'Metinden IOC ayıkla' },
-];
+import { toolsByCategory, type ToolId } from './registry';
 
 const inputCls =
   'w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 outline-none focus:border-cyan-500';
@@ -163,6 +159,90 @@ function JwtTool() {
   );
 }
 
+function PasswordTool() {
+  const [pw, setPw] = useState('');
+  const [len, setLen] = useState(20);
+  const [sym, setSym] = useState(true);
+  const strength = passwordStrength(pw);
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Field label="Parola gücü ölç">
+          <input
+            className={inputCls}
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder="parolanı yaz…"
+          />
+        </Field>
+        {pw && (
+          <p className="text-sm text-slate-300">
+            {strength.bits} bit entropi ·{' '}
+            <span className="font-medium text-cyan-300">{strength.verdict}</span> ({strength.length}{' '}
+            karakter)
+          </p>
+        )}
+      </div>
+      <div className="space-y-2 border-t border-slate-800 pt-3">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+          <label className="flex items-center gap-1.5">
+            uzunluk
+            <input
+              type="number"
+              min={4}
+              max={128}
+              value={len}
+              onChange={(e) => setLen(Number(e.target.value))}
+              className="w-16 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm"
+            />
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input type="checkbox" checked={sym} onChange={(e) => setSym(e.target.checked)} />{' '}
+            semboller
+          </label>
+        </div>
+        <Output label="Üretilen parola" value={generatePassword({ length: len, symbols: sym })} />
+        <p className="text-[11px] text-slate-600">Her satır yenilemede yeni parola üretilir.</p>
+      </div>
+    </div>
+  );
+}
+
+function TokenTool() {
+  const [uuid, setUuid] = useState('');
+  const [tok, setTok] = useState('');
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <button
+          onClick={() => setUuid(uuidv4())}
+          className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:border-cyan-500"
+        >
+          UUID v4 üret
+        </button>
+        <Output label="UUID" value={uuid} />
+      </div>
+      <div className="space-y-2 border-t border-slate-800 pt-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTok(generateToken(32, 'hex'))}
+            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:border-cyan-500"
+          >
+            256-bit hex
+          </button>
+          <button
+            onClick={() => setTok(generateToken(32, 'base64url'))}
+            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:border-cyan-500"
+          >
+            256-bit base64url
+          </button>
+        </div>
+        <Output label="Token" value={tok} />
+      </div>
+    </div>
+  );
+}
+
 function CidrTool() {
   const [value, setValue] = useState('192.168.1.0/24');
   let info: ReturnType<typeof parseCidr> | null = null;
@@ -217,35 +297,161 @@ function IocTool() {
   );
 }
 
-export function ToolsClient() {
-  const [active, setActive] = useState<ToolId>('base64');
-  return (
-    <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)]">
-      <nav className="flex flex-row flex-wrap gap-1.5 md:flex-col">
-        {TOOLS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setActive(t.id)}
-            className={`rounded-lg border px-3 py-2 text-left transition ${
-              active === t.id
-                ? 'border-cyan-500 bg-cyan-950/40'
-                : 'border-slate-800 bg-slate-900/40 hover:border-slate-600'
-            }`}
+function DorkTool() {
+  const [value, setValue] = useState('');
+  const dorks = value.trim() ? buildDorks(value) : null;
+  const list = (title: string, items: ReturnType<typeof buildDorks>['google']) => (
+    <div className="space-y-1.5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
+      {items.map((d) => (
+        <div
+          key={d.query}
+          className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-sm text-slate-200">{d.label}</div>
+            <div className="truncate font-mono text-[11px] text-slate-500">{d.query}</div>
+          </div>
+          <CopyButton text={d.query} />
+          <a
+            href={d.url}
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 text-xs text-cyan-400 hover:text-cyan-300"
           >
-            <span className="block text-sm font-medium text-slate-100">{t.label}</span>
-            <span className="hidden text-[11px] text-slate-500 md:block">{t.hint}</span>
-          </button>
+            aç ↗
+          </a>
+        </div>
+      ))}
+    </div>
+  );
+  return (
+    <div className="space-y-3">
+      <Field label="Hedef alan adı">
+        <input
+          className={inputCls}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="example.com"
+        />
+      </Field>
+      {dorks && (
+        <div className="space-y-4">
+          {list('Google', dorks.google)}
+          {list('GitHub', dorks.github)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TyposquatTool() {
+  const [value, setValue] = useState('');
+  const list = value.trim() ? buildTyposquats(value) : [];
+  return (
+    <div className="space-y-3">
+      <Field label="Alan adı">
+        <input
+          className={inputCls}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="example.com"
+        />
+      </Field>
+      {list.length > 0 && (
+        <Output label={`Benzer alan adları (${list.length})`} value={list.join('\n')} />
+      )}
+    </div>
+  );
+}
+
+function TimeTool() {
+  const [value, setValue] = useState('');
+  const info = value.trim() ? convertTime(value, Date.now()) : null;
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input
+          className={inputCls}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="epoch (1600000000) ya da ISO tarih"
+        />
+        <button
+          onClick={() => setValue(String(Math.floor(Date.now() / 1000)))}
+          className="shrink-0 rounded-lg border border-slate-700 px-3 text-sm text-slate-200 hover:border-cyan-500"
+        >
+          şimdi
+        </button>
+      </div>
+      {value && !info && <p className="text-xs text-rose-400">⚠️ Anlaşılmadı.</p>}
+      {info && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {Object.entries(info).map(([k, v]) => (
+            <div
+              key={k}
+              className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm"
+            >
+              <span className="text-slate-500">{k}</span>
+              <span className="font-mono text-slate-200">{String(v)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const PANELS: Record<ToolId, ReactNode> = {
+  base64: <EncoderTool enc={toBase64} dec={fromBase64} />,
+  hex: <EncoderTool enc={toHex} dec={fromHex} />,
+  url: <EncoderTool enc={urlEncode} dec={urlDecode} />,
+  hash: <HashTool />,
+  jwt: <JwtTool />,
+  password: <PasswordTool />,
+  token: <TokenTool />,
+  cidr: <CidrTool />,
+  ioc: <IocTool />,
+  dork: <DorkTool />,
+  typosquat: <TyposquatTool />,
+  time: <TimeTool />,
+};
+
+interface Props {
+  active: ToolId;
+  onActive: (id: ToolId) => void;
+}
+
+export function ToolsClient({ active, onActive }: Props) {
+  return (
+    <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+      <nav className="space-y-3">
+        {toolsByCategory().map(([cat, tools]) => (
+          <div key={cat}>
+            <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              {cat}
+            </div>
+            <div className="space-y-0.5">
+              {tools.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => onActive(t.id)}
+                  className={`block w-full rounded-md px-3 py-1.5 text-left text-sm ${
+                    active === t.id
+                      ? 'bg-cyan-950/40 text-cyan-200'
+                      : 'text-slate-300 hover:bg-slate-900'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-        {active === 'base64' && <EncoderTool enc={toBase64} dec={fromBase64} />}
-        {active === 'hex' && <EncoderTool enc={toHex} dec={fromHex} />}
-        {active === 'url' && <EncoderTool enc={urlEncode} dec={urlDecode} />}
-        {active === 'hash' && <HashTool />}
-        {active === 'jwt' && <JwtTool />}
-        {active === 'cidr' && <CidrTool />}
-        {active === 'ioc' && <IocTool />}
+        {PANELS[active]}
         <p className="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-500">
           🔒 Tüm araçlar tarayıcında çalışır — hiçbir veri sunucuya yüklenmez.
         </p>

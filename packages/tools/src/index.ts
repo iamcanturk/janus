@@ -21,5 +21,12 @@ export { parseCidr } from './cidr.js';
 export type { CidrInfo } from './cidr.js';
 export { extractIocs } from './ioc.js';
 export type { Iocs } from './ioc.js';
+export { buildDorks } from './dork.js';
+export type { Dork } from './dork.js';
+export { passwordStrength, generatePassword, generateToken, uuidv4 } from './secrets.js';
+export type { PasswordStrength, PasswordOptions } from './secrets.js';
+export { buildTyposquats } from './typosquat.js';
+export { convertTime } from './time.js';
+export type { TimeInfo } from './time.js';
 
 export const TOOLS_PACKAGE = '@janus/tools';
