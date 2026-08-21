@@ -2,55 +2,42 @@
  * Streaming scan API.
  *
  * Runs a scan with `runScan` and streams each task result to the browser as a
- * Server-Sent Event, then a final summary. Node runtime — the passive modules
- * use `fetch` and run server-side so third-party requests come from the server,
- * not the user's browser.
- *
- * This is the interactive demo path. The durable queue/DB path (Phase 2) is
- * used for background jobs.
+ * Server-Sent Event, then a final summary with the graph. Node runtime — the
+ * modules use `fetch` server-side. Accepts a whole profile or an explicit set
+ * of check ids (single query / staged). Persists the scan to the database when
+ * one is available (best-effort; the scan works without it).
  */
 
-import { getProfile, runScan } from '@janus/core';
-import type { CheckConfig, Edge, Entity, EntityType } from '@janus/core';
+import { PHASES, runScan } from '@janus/core';
+import type { CheckConfig, EntityType, Profile } from '@janus/core';
 import { createRegistry } from '@janus/checks';
-import type { DoneEvent, GraphView, ScanRequest, TaskEvent } from '@/lib/types';
-
-/** Nodes shown on the pivot canvas, capped so the graph stays readable. */
-const MAX_GRAPH_NODES = 250;
-/** Entity types de-prioritized when the graph is capped (noisy / low-pivot). */
-const LOW_PRIORITY = new Set(['url', 'dns_record']);
-
-function buildGraph(entities: readonly Entity[], edges: readonly Edge[]): GraphView {
-  const ordered = [...entities].sort((a, b) => {
-    const pa = LOW_PRIORITY.has(a.type) ? 1 : 0;
-    const pb = LOW_PRIORITY.has(b.type) ? 1 : 0;
-    return pa - pb;
-  });
-  const kept = ordered.slice(0, MAX_GRAPH_NODES);
-  const keptIds = new Set(kept.map((e) => e.id));
-  return {
-    nodes: kept.map((e) => ({ id: e.id, type: e.type, value: e.value })),
-    edges: edges
-      .filter((e) => keptIds.has(e.from) && keptIds.has(e.to))
-      .map((e) => ({ from: e.from, to: e.to, relation: e.relation })),
-    truncated: Math.max(0, entities.length - kept.length),
-  };
-}
+import { createJob, markJobDone, persistScanReport } from '@janus/db';
+import { withDb } from '@/lib/db';
+import { buildGraphView } from '@/lib/graph';
+import { detectType, normalizeTarget } from '@/lib/detect';
+import type { DoneEvent, ScanRequest, TaskEvent } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const registry = createRegistry();
-
-/** Conservative limits applied when a profile enables active checks. */
 const ACTIVE_CONFIG: CheckConfig = {
   rateLimitPerSec: 15,
   timeoutMs: 20_000,
   options: { portTimeoutMs: 2500 },
 };
 
-function sse(event: string, data: unknown): string {
-  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+/** Ephemeral profile that runs exactly the given checks (used for staged runs). */
+function customProfile(checkIds: readonly string[]): Profile {
+  const active = checkIds.some((id) => registry.get(id)?.mode === 'active');
+  return {
+    id: 'custom',
+    title: 'Özel',
+    description: 'Seçili modüller',
+    phases: [...PHASES],
+    allowActive: active,
+    includeChecks: [...checkIds],
+  };
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -61,28 +48,33 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  const value = body.value?.trim();
+  const value = normalizeTarget(body.value ?? '');
   if (!value) return new Response('Missing target', { status: 400 });
-  const type: EntityType = body.type ?? 'domain';
-  const profileId = body.profileId ?? 'pasif-recon';
+  const type: EntityType =
+    body.type ?? (detectType(value) === 'unknown' ? 'domain' : detectType(value));
 
-  const profile = getProfile(profileId);
-  if (!profile) return new Response('Unknown profile', { status: 400 });
-  const config = profile.allowActive ? ACTIVE_CONFIG : undefined;
+  const profile: string | Profile = body.checkIds?.length
+    ? customProfile(body.checkIds)
+    : (body.profileId ?? 'pasif-recon');
+  const allowActive =
+    typeof profile === 'string' ? profile === 'bug-bounty-surface' : profile.allowActive;
+  const config = allowActive ? ACTIVE_CONFIG : undefined;
+  const seeds = (body.seeds ?? []).map((n) => ({ type: n.type, value: n.value }));
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: string, data: unknown) =>
-        controller.enqueue(encoder.encode(sse(event, data)));
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
 
       try {
         const report = await runScan(
           registry,
-          profileId,
+          profile,
           { type, value },
           {
             config,
+            seeds,
             onTask: (task) => {
               const evt: TaskEvent = {
                 checkId: task.checkId,
@@ -104,19 +96,25 @@ export async function POST(req: Request): Promise<Response> {
         const entityTypes: Record<string, number> = {};
         for (const e of report.entities) entityTypes[e.type] = (entityTypes[e.type] ?? 0) + 1;
 
+        // Persist best-effort; the id (if any) lets the client link to history.
+        const savedId = await withDb(async (db) => {
+          const job = await createJob(db, {
+            target: { type, value },
+            profileId: report.profileId,
+            allowActive,
+          });
+          await persistScanReport(db, job.id, report);
+          await markJobDone(db, job.id);
+          return job.id;
+        }, null);
+
         const done: DoneEvent = {
-          counts: {
-            tasks: report.counts.tasks,
-            entities: report.counts.entities,
-            edges: report.counts.edges,
-            observations: report.counts.observations,
-            findings: report.counts.findings,
-          },
+          counts: report.counts,
           entityTypes,
           findings: report.findings,
-          graph: buildGraph(report.entities, report.edges),
+          graph: buildGraphView(report.entities, report.edges),
         };
-        send('done', done);
+        send('done', { ...done, savedId });
       } catch (err) {
         send('error', { message: err instanceof Error ? err.message : String(err) });
       } finally {

@@ -15,7 +15,7 @@ describe('passive scan integration (mocked network)', () => {
     const aRecord = { Status: 0, Answer: [{ name: 'example.com', type: 1, data: '203.0.113.5' }] };
 
     const ctx = makeContext(
-      on('crt.sh', jsonResponse([{ name_value: 'www.example.com' }])),
+      on('crt.name', new Response('www.example.com\n', { status: 200 })),
       on(
         'rdap.org',
         jsonResponse({

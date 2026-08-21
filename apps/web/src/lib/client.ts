@@ -2,9 +2,11 @@
 
 import type { DoneEvent, ErrorEvent, ScanRequest, TaskEvent } from './types';
 
+export type DoneWithSave = DoneEvent & { savedId?: string | null };
+
 export interface ScanHandlers {
   onTask: (task: TaskEvent) => void;
-  onDone: (done: DoneEvent) => void;
+  onDone: (done: DoneWithSave) => void;
   onError: (err: ErrorEvent) => void;
 }
 
@@ -53,7 +55,7 @@ export async function streamScan(
       if (!data) continue;
       const parsed = JSON.parse(data);
       if (event === 'task') handlers.onTask(parsed as TaskEvent);
-      else if (event === 'done') handlers.onDone(parsed as DoneEvent);
+      else if (event === 'done') handlers.onDone(parsed as DoneWithSave);
       else if (event === 'error') handlers.onError(parsed as ErrorEvent);
     }
   }
